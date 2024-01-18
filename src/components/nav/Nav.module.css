@@ -1,0 +1,8 @@
+.root {
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.root[data-active]:hover {
+  background-color: var(--mantine-color-cduPrimary-6);
+}
