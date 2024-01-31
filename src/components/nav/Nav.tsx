@@ -17,6 +17,7 @@ import {
   IconTrophy,
   IconBadges,
   IconLogout,
+  IconTournament
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,6 +33,11 @@ const navLinks = [
     href: "/competitions",
     label: "Competitions",
     icon: <IconFiles size="1rem" stroke={1.5} />,
+  },
+  {
+    href: "/projects",
+    label: "Projects",
+    icon: <IconTournament size="1rem" stroke={1.5} />,
   },
   {
     href: "/winners",

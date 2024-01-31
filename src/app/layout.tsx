@@ -27,7 +27,7 @@ const MantineLayout = (props: PropsWithChildren) => {
   const admin = false;
   return (
     <MantineProvider theme={theme}>
-      {admin ? <AdminShell /> : }
-      </MantineProvider>
+      <AdminShell>{children}</AdminShell>
+    </MantineProvider>
   );
 };
