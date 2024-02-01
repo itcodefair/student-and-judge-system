@@ -1,7 +1,7 @@
 import { AppShell, Box, Burger, Image } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import NextImage from "next/image";
-import Nav from "../nav/Nav";
+import Nav from "../nav/AdminNav";
 import DesktopLogo from "@/../public/images/logo_desktop.png";
 import MobileLogo from "@/../public/images/logo_mobile.png";
 import { PropsWithChildren } from "react";

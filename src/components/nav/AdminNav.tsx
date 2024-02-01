@@ -17,50 +17,50 @@ import {
   IconTrophy,
   IconBadges,
   IconLogout,
-  IconTournament
+  IconTournament,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import classes from "./Nav.module.css";
+import classes from "./AdminNav.module.css";
 
 const navLinks = [
   {
-    href: "/",
+    href: "/admin",
     label: "Dashboard",
     icon: <IconDashboard size="1rem" stroke={1.5} />,
   },
   {
-    href: "/competitions",
+    href: "/admin/competitions",
     label: "Competitions",
     icon: <IconFiles size="1rem" stroke={1.5} />,
   },
   {
-    href: "/projects",
+    href: "/admin/projects",
     label: "Projects",
     icon: <IconTournament size="1rem" stroke={1.5} />,
   },
   {
-    href: "/winners",
+    href: "/admin/winners",
     label: "Winners",
     icon: <IconTrophy size="1rem" stroke={1.5} />,
   },
   {
-    href: "/judges",
+    href: "/admin/judges",
     label: "Judges",
     icon: <IconBadges size="1rem" stroke={1.5} />,
   },
   {
-    href: "/contestants",
+    href: "/admin/contestants",
     label: "Contestants",
     icon: <IconUsers size="1rem" stroke={1.5} />,
   },
   {
-    href: "/admin",
+    href: "/admin/admin",
     label: "Admins",
     icon: <IconUserCog size="1rem" stroke={1.5} />,
   },
   {
-    href: "/settings",
+    href: "/admin/settings",
     label: "Site Settings",
     icon: <IconSettings size="1rem" stroke={1.5} />,
   },

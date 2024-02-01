@@ -6,7 +6,7 @@ import { MantineProvider } from "@mantine/core";
 import { nextFont } from "@/styles/next-font";
 import { PropsWithChildren } from "react";
 import { theme } from "@/styles/theme";
-import AdminShell from "@/components/Admin/AdminShell";
+import AdminShell from "@/components/shells/AdminShell";
 
 export default function Layout({ children }) {
   return (
@@ -24,7 +24,6 @@ export default function Layout({ children }) {
 
 const MantineLayout = (props: PropsWithChildren) => {
   const { children } = props;
-  const admin = false;
   return (
     <MantineProvider theme={theme}>
       <AdminShell>{children}</AdminShell>
