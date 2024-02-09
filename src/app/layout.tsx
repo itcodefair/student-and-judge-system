@@ -2,6 +2,7 @@
 // Import styles of packages that you've installed.
 
 import "@mantine/core/styles.css";
+import "mantine-datatable/styles.layer.css";
 import { MantineProvider } from "@mantine/core";
 import { nextFont } from "@/styles/next-font";
 import { PropsWithChildren } from "react";
