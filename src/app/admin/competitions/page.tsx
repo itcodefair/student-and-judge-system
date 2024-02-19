@@ -5,38 +5,54 @@ import {
   Select,
   Flex,
   Group,
-  ActionIcon,
-  Tooltip,
+  Modal,
 } from "@mantine/core";
-import {
-  IconCopy,
-  IconFileExport,
-  IconPlus,
-  IconSearch,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconSearch } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import sortBy from "lodash/sortBy";
+import addRow from "@/lib/addRow";
+import archiveRow from "@/lib/archiveRow";
+import useSWR from "swr";
+import ArchiveButton from "@/components/actionButton/ArchiveButton";
+import CloneButton from "@/components/actionButton/CloneButton";
+import CreateButton from "@/components/actionButton/CreateButton";
+import { useDisclosure } from "@mantine/hooks";
+import CreateCompetition from "./components/CreateCompetition";
+import ExportButton from "@/components/actionButton/ExportButton";
 import moment from "moment";
+import CompetitionPanel from "./components/CompetitionPanel";
+import { usePathname, useRouter } from "next/navigation";
 
-export interface Competitions {
+export interface Competition {
   _id: string;
   title: string;
   type: string;
   registrationStartDate: string;
   registrationEndDate: string;
+  rubicId: string;
+  createdDate: string;
+  updatedDate: string;
   judgeDate: string;
   status: string;
 }
 
 export default function Competitions() {
   // const dataGridKey = "competition-table";
-  const [selectedRows, setSelectedRows] = useState<Competitions[]>([]);
-  const [compItems, setCompItems] = useState<Competitions[]>([]);
-  const [filteredData, setFilteredData] = useState<Competitions[]>([]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const url = "/api/db/competition";
+  const { data, error, isLoading, mutate } = useSWR(url);
+  const [compItems, setCompItems] = useState<Competition[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Competition[]>([]);
+  const [years, setYears] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [opened, { open, close }] = useDisclosure(false);
+  const [panelOpened, { open: openPanel, close: closePanel }] =
+    useDisclosure(false);
+  const [filteredData, setFilteredData] = useState<Competition[]>([]);
   const [sortStatus, setSortStatus] = useState<
-    DataTableSortStatus<Competitions>
+    DataTableSortStatus<Competition>
   >({ columnAccessor: "createdDate", direction: "desc" });
   const [query, setQuery] = useState("");
   const [selectFilter, setSelectFilter] = useState("");
@@ -50,70 +66,91 @@ export default function Competitions() {
     {
       accessor: "registrationStartDate",
       label: "Registration start date",
+      render: ({ registrationStartDate }) =>
+        moment(registrationStartDate).format("YYYY-MM-DD"),
       ...props,
     },
     {
       accessor: "registrationEndDate",
       label: "Registration end date",
+      render: ({ registrationEndDate }) =>
+        moment(registrationEndDate).format("YYYY-MM-DD"),
       ...props,
     },
     {
-      accessor: "createdDate",
-      label: "Created date",
+      accessor: "judgeDate",
+      label: "Judge date",
+      render: ({ judgeDate }) => moment(judgeDate).format("YYYY-MM-DD"),
       ...props,
     },
-    { accessor: "judgeDate", label: "Judge date", ...props },
+    { accessor: "rubicId", label: "Rubic Id", ...props },
+    {
+      accessor: "createdDate",
+      label: "Created date",
+      render: ({ createdDate }) =>
+        moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss"),
+      ...props,
+    },
+    {
+      accessor: "updatedDate",
+      label: "Updated date",
+      render: ({ createdDate }) =>
+        moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss"),
+      ...props,
+    },
     { accessor: "status", label: "Status", ...props },
   ];
 
   useEffect(() => {
+    if (!isLoading && data.length > 0) {
+      const years = [
+        ...new Set(
+          data.map((item) =>
+            new Date(item.createdDate).getFullYear().toString()
+          )
+        ),
+      ] as string[];
+      setSelectedYear(years[0]);
+      setYears(years);
+      setCompItems(data);
+    }
+  }, [data]);
+
+  useEffect(() => {
     const filterData = () => {
-      if (query.trim() === "") {
-        return compItems;
+      let data = compItems;
+      if (selectedYear) {
+        const year = parseInt(selectedYear, 10);
+        data = data.filter((item) => {
+          return new Date(item.createdDate).getFullYear() === year;
+        });
       }
-      // Filter data based on selectFilter and query
-      return compItems.filter((item) => {
+      if (query.trim() === "") {
+        return data;
+      }
+      return data.filter((item) => {
         if (!selectFilter) {
-          // Convert each column value to lowercase for case-insensitive matching
           for (const key in item) {
-            if (item.hasOwnProperty(key)) {
-              const columnValue = item[key].toLowerCase();
-              const queryValue = query.toLowerCase();
-              if (columnValue.includes(queryValue)) {
+            if (key !== "_id" && item.hasOwnProperty(key)) {
+              const columnValue = item[key];
+              if (
+                typeof columnValue === "string" &&
+                columnValue.includes(query)
+              ) {
                 return true;
               }
             }
           }
           return false;
         } else {
-          const columnValue = item[selectFilter].toLowerCase();
-          const queryValue = query.toLowerCase();
-          return columnValue.includes(queryValue);
+          const columnValue = item[selectFilter];
+          return typeof columnValue === "string" && columnValue.includes(query);
         }
       });
     };
     const filteredData = filterData();
     setFilteredData(filteredData);
-  }, [compItems, selectFilter, query]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/db/competition");
-        const data = await response.json();
-
-        if (response.ok) {
-          setCompItems(data);
-        } else {
-          console.error("Error fetching data:", data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  }, [compItems, selectFilter, selectedYear, query]);
 
   useEffect(() => {
     const sorted = sortBy(compItems, [
@@ -125,103 +162,67 @@ export default function Competitions() {
     setCompItems(sortStatus.direction === "desc" ? sorted.reverse() : sorted);
   }, [sortStatus]);
 
-  async function copy(rows: any[]) {
-    if (rows.length === 0) {
-      console.error("Please select at least one row to clone.");
-      return;
-    }
-
-    try {
-      const body = rows.map(({ _id, ...row }) => ({
-        ...row,
-        createdDate: moment().format(),
-      }));
-
-      const response = await fetch("/api/db/competition", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to clone rows.");
-      }
-    } catch (error) {
-      console.error("Error cloning rows:", error);
-    }
-  }
-
-  async function archived(rows: any[]) {
-    if (rows.length === 0) {
-      console.error("Please select at least one row to clone.");
-      return;
-    }
-
-    try {
-      // Extract the IDs of the selected rows
-      const ids = rows.map((row) => row._id);
-
-      // Send a POST request to the API endpoint
-      const response = await fetch("/api/db/competition", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids, status: "archived" }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to archive rows.");
-      }
-
-      console.log("Rows archived successfully.");
-    } catch (error) {
-      console.error("Error archiving rows:", error);
-    }
-  }
-
   return (
     <Container fluid p="lg">
+      <Modal
+        opened={opened}
+        onClose={close}
+        centered
+        size="lg"
+        title="Create competition"
+      >
+        <CreateCompetition close={close} />
+      </Modal>
+      <CompetitionPanel open={panelOpened} onClose={closePanel} />
       <Flex mb={"lg"} justify="space-between">
         <Group>
-          <Select></Select>
-          <Tooltip label="Create">
-            <ActionIcon size={"lg"}>
-              <IconPlus />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Copy">
-            <ActionIcon
-              disabled={selectedRows.length > 0 ? false : true}
-              size={"lg"}
-              onClick={() => copy(selectedRows)}
-            >
-              <IconCopy />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Delete">
-            <ActionIcon
-              disabled={selectedRows.length > 0 ? false : true}
-              size={"lg"}
-              color="red.7"
-              onClick={() => archived(selectedRows)}
-            >
-              <IconTrash />
-            </ActionIcon>
-          </Tooltip>
+          <Select
+            clearable
+            checkIconPosition="right"
+            placeholder={selectedYear}
+            value={selectedYear}
+            data={years}
+            onChange={(year) => setSelectedYear(year || "")}
+          />
+          <CreateButton onClick={open} />
+          <CloneButton
+            disabled={selectedRows.length === 0}
+            onClick={async () => {
+              const res = await addRow(selectedRows, url);
+              if (res) {
+                setSelectedRows([]);
+                mutate(selectedRows);
+              }
+            }}
+          />
+          <ArchiveButton
+            disabled={selectedRows.length === 0}
+            count={selectedRows.length}
+            onClick={async () => {
+              const res = await archiveRow(selectedRows, url);
+              if (res) {
+                setSelectedRows([]);
+                mutate(selectedRows);
+              }
+            }}
+          />
         </Group>
         <Group>
           <Select
             clearable
+            checkIconPosition="right"
             placeholder="Search all..."
             data={columns.map((column) => ({
               value: column.accessor,
               label: column.label,
             }))}
             value={selectFilter}
-            onChange={(value) => setSelectFilter(value || "")}
+            onChange={(value) => {
+              if (!value) {
+                setQuery("");
+              }
+              setSelectFilter(value || "");
+            }}
           ></Select>
           <TextInput
             radius={"xl"}
@@ -230,21 +231,14 @@ export default function Competitions() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <Tooltip label="Export">
-            <ActionIcon
-              disabled={compItems.length > 0 ? false : true}
-              size={"lg"}
-            >
-              <IconFileExport />
-            </ActionIcon>
-          </Tooltip>
+          <ExportButton data={filteredData} fileName="competition" />
         </Group>
       </Flex>
       <DataTable
         minHeight={150}
         withTableBorder
         highlightOnHover
-        // storeColumnsKey={dataGridKey}
+        fetching={isLoading}
         columns={columns}
         records={filteredData}
         selectedRecords={selectedRows}
@@ -252,6 +246,12 @@ export default function Competitions() {
         sortStatus={sortStatus}
         onSortStatusChange={setSortStatus}
         idAccessor="_id"
+        onRowClick={({ record }) => {
+          router.push(pathname + "?ItemId=" + record._id, {
+            scroll: false,
+          });
+          openPanel();
+        }}
       />
     </Container>
   );

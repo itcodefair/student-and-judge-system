@@ -2,15 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import getDbCollection from "@/lib/getDbCollection";
 import { ObjectId } from "mongodb";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl;
+  const id = searchParams.get("id");
   try {
     const collection = await getDbCollection("competitions");
     if (!collection) {
       return null;
     }
-    const res = await collection.find().toArray();
+    if (id) {
+      const competition = await collection.findOne({ _id: new ObjectId(id) });
+      if (!competition) {
+        return NextResponse.json(
+          { error: "Competition not found" },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(competition, { status: 200 });
+    }
+    const competitions = await collection
+      .find({ status: { $ne: "archived" } })
+      .sort({ createdDate: -1 })
+      .toArray();
 
-    return NextResponse.json(res, { status: 200 });
+    return NextResponse.json(competitions, { status: 200 });
   } catch (error) {
     return NextResponse.json(error, { status: 500 });
   }
@@ -51,7 +66,6 @@ export async function PATCH(req: NextRequest) {
 
     // Check if any documents were updated
     if (res.modifiedCount === 0) {
-      console.log("in");
       return NextResponse.error();
     }
     return NextResponse.json(res, { status: 201 });
