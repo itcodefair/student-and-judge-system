@@ -8,7 +8,7 @@ import {
 import { useForm, isNotEmpty, createFormActions } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import moment from "moment";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export interface CompetitionFormValues {
   title: string;
@@ -21,6 +21,7 @@ export interface CompetitionFormValues {
 }
 
 export default function CompetitionForm({
+  initialValues,
   handleSubmit,
   icon,
   buttonText,
@@ -31,15 +32,6 @@ export default function CompetitionForm({
   const form = useForm<CompetitionFormValues>({
     name: "competition-form",
     validateInputOnChange: true,
-    initialValues: {
-      title: "",
-      type: "",
-      rubicId: "",
-      judgeDate: null,
-      registrationStartDate: null,
-      registrationEndDate: null,
-      status: "",
-    },
     validate: {
       title: isNotEmpty("Title cannot be empty"),
       type: isNotEmpty("Please select a competition type"),
@@ -58,17 +50,28 @@ export default function CompetitionForm({
 
   const handleOnSubmit = async (values) => {
     setLoading(true);
-    const res = handleSubmit([values]);
-    res.then((promise) => {
-      if (!promise) {
-        toggleError();
-      }
-    });
-    setLoading(false);
+    const res = handleSubmit(values);
+    res
+      .then((promise) => {
+        if (!promise) {
+          toggleError();
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
+  useEffect(() => {
+    form.initialize(initialValues);
+  }, [form, initialValues]);
+
   return (
-    <form onSubmit={form.onSubmit((values) => handleOnSubmit(values))}>
+    <form
+      onSubmit={form.onSubmit((formValues: CompetitionFormValues) => {
+        handleOnSubmit(formValues);
+      })}
+    >
       <Stack>
         {error && (
           <Group c="red.6">
@@ -157,7 +160,10 @@ export default function CompetitionForm({
           <Button
             leftSection={<IconRefresh />}
             variant="default"
-            onClick={() => form.reset()}
+            onClick={() => {
+              form.reset();
+              console.log(form.values);
+            }}
             disabled={disabled}
           >
             Reset

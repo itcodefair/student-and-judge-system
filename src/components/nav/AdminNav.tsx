@@ -45,25 +45,20 @@ const navLinks = [
     icon: <IconTrophy size="1rem" stroke={1.5} />,
   },
   {
-    href: "/admin/judges",
-    label: "Judges",
+    href: "/admin/assign-judge",
+    label: "Assign Judges",
     icon: <IconBadges size="1rem" stroke={1.5} />,
   },
   {
-    href: "/admin/contestants",
-    label: "Contestants",
+    href: "/admin/users",
+    label: "Users",
     icon: <IconUsers size="1rem" stroke={1.5} />,
   },
-  {
-    href: "/admin/admin",
-    label: "Admins",
-    icon: <IconUserCog size="1rem" stroke={1.5} />,
-  },
-  {
-    href: "/admin/settings",
-    label: "Site Settings",
-    icon: <IconSettings size="1rem" stroke={1.5} />,
-  },
+  // {
+  //   href: "/admin/settings",
+  //   label: "Site Settings",
+  //   icon: <IconSettings size="1rem" stroke={1.5} />,
+  // },
 ];
 
 export default function Nav(props: PropsWithChildren) {

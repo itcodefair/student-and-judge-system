@@ -1,23 +1,21 @@
 import moment from "moment";
 
-const addRow = async (rows: any[], url: string) => {
-  if (rows.length === 0) {
-    console.error("Please select at least one row to clone.");
-    return;
-  }
-
+export default async function addRow(data: {}, url: string) {
   try {
-    const body = rows.map(({ _id, ...row }) => {
-      const newRow = { ...row };
-      for (const key in newRow) {
-        if (key.endsWith("Date")) {
-          newRow[key] = moment(newRow[key]).format();
-        }
+    const formattedData = { ...data };
+    for (const key in formattedData) {
+      if (key.endsWith("Date")) {
+        formattedData[key] = moment(formattedData[key]).format();
       }
-      newRow.createdDate = moment().format();
-      newRow.updatedDate = moment().format();
-      return newRow;
-    });
+    }
+
+    const body = [
+      {
+        ...formattedData,
+        createdDate: moment().format(),
+        updatedDate: moment().format(),
+      },
+    ];
 
     const response = await fetch(url, {
       method: "POST",
@@ -28,13 +26,11 @@ const addRow = async (rows: any[], url: string) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to clone rows.");
+      throw new Error("Failed to add row.");
     }
     return response.ok;
   } catch (error) {
-    console.error("Error cloning rows:", error);
+    console.error("Error adding row:", error);
     return null;
   }
-};
-
-export default addRow;
+}

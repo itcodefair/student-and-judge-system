@@ -1,32 +1,85 @@
-import { ActionIcon, Button, Tooltip, Modal, Text, Group } from "@mantine/core";
+import archiveRow from "@/lib/archiveRow";
+import {
+  ActionIcon,
+  Button,
+  Tooltip,
+  Modal,
+  Text,
+  Group,
+  Stack,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconTrash } from "@tabler/icons-react";
+import { IconExclamationCircle, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
+import { useSWRConfig } from "swr";
 
-export default function ArchiveButton({ disabled, onClick, count }) {
+interface archiveButtonProps {
+  selectedRows: any[];
+  url: string;
+  setSelectedRows: React.Dispatch<React.SetStateAction<any[]>>;
+}
+
+export default function ArchiveButton(props: archiveButtonProps) {
+  const { selectedRows, url, setSelectedRows } = props;
   const [opened, { open, close }] = useDisclosure(false);
+  const { mutate } = useSWRConfig();
+  const [error, { toggle: toggleError }] = useDisclosure(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleOnClick = async () => {
+    setLoading(true);
+    try {
+      const res = await archiveRow(selectedRows, url);
+      if (res) {
+        mutate(url);
+        close();
+        setSelectedRows([]);
+      } else {
+        throw Error;
+      }
+    } catch (error) {
+      toggleError();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Modal opened={opened} onClose={close} title="Delete Confirmation">
-        <Text>
-          Are you sure you want to{" "}
-          <Text span c="red" size="md" fw="700">
-            delete {count} row/s?
+        <Stack>
+          <Text>
+            Are you sure you want to{" "}
+            <Text span c="red" size="md" fw="700">
+              delete {selectedRows.length} row/s?
+            </Text>
           </Text>
-        </Text>
-        <Group justify="space-between" mt="md">
-          <Button onClick={close} variant="default">
-            Cancel
-          </Button>
-          <Button color="red" onClick={onClick} leftSection={<IconTrash />}>
-            Delete
-          </Button>
-        </Group>
+          {error && (
+            <Group c="red.6">
+              <IconExclamationCircle />
+              <Text size="sm">{`Failed to archive`}</Text>
+            </Group>
+          )}
+          <Group justify="space-between">
+            <Button onClick={close} variant="default">
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={handleOnClick}
+              leftSection={<IconTrash />}
+              loading={loading}
+            >
+              Delete
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
       <Tooltip label="Delete">
         <ActionIcon
-          disabled={disabled}
+          disabled={selectedRows.length === 0}
           size={"lg"}
-          color="red.7"
+          color="red"
           onClick={open}
         >
           <IconTrash />

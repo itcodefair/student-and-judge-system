@@ -1,23 +1,37 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import CompetitionForm, { CompetitionFormActions } from "./CompetitionForm";
-import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
-import { IconDeviceFloppy, IconEdit, IconRefresh } from "@tabler/icons-react";
-import { Box, Button, Group, LoadingOverlay, Stack } from "@mantine/core";
+import { IconDeviceFloppy, IconEdit } from "@tabler/icons-react";
+import {
+  Box,
+  Button,
+  Drawer,
+  LoadingOverlay,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { Competition } from "../page";
 import { useDisclosure } from "@mantine/hooks";
 import editRow from "@/lib/editRow";
 
-export default function CompetitionDetail() {
-  const id = useSearchParams().get("ItemId");
+interface CompetitionDetailProps {
+  open: boolean;
+  onClose: () => void;
+  id: string;
+}
+
+export default function CompetitionDetail(props: CompetitionDetailProps) {
   const url = "/api/db/competition";
+  const { open, onClose, id } = props;
   const { data, error, isLoading, mutate } = useSWR<Competition>(
     `${url}?id=${id}`
   );
-  const [disable, { toggle }] = useDisclosure(true);
+  const [disable, { toggle, open: disableOnLoad }] = useDisclosure(true);
+  const [initialValues, setInitialValues] = useState({});
 
   useEffect(() => {
-    if (data) {
+    disableOnLoad();
+    if (!isLoading && data) {
       const { _id, createdDate, updatedDate, ...values } = data;
       const formattedData = {
         ...values,
@@ -25,15 +39,17 @@ export default function CompetitionDetail() {
         registrationEndDate: new Date(values.registrationEndDate),
         judgeDate: new Date(values.judgeDate),
       };
+      setInitialValues(formattedData);
       CompetitionFormActions.setInitialValues(formattedData);
       CompetitionFormActions.setValues(formattedData);
     }
   }, [data]);
 
   const handleSubmit = async (values) => {
+    values._id = id;
     const res = await editRow(values, url);
     if (res) {
-      mutate();
+      mutate(values);
       toggle();
       return true;
     } else {
@@ -42,23 +58,37 @@ export default function CompetitionDetail() {
   };
 
   return (
-    <Box pos="relative">
-      <LoadingOverlay visible={isLoading} loaderProps={{ type: "oval" }} />
-      <Stack>
-        <Button
-          onClick={() => toggle()}
-          leftSection={<IconEdit />}
-          variant={disable ? "filled" : "light"}
-        >
-          {disable ? "Edit" : "Editing..."}
-        </Button>
-        <CompetitionForm
-          handleSubmit={handleSubmit}
-          icon={<IconDeviceFloppy />}
-          buttonText={"Save"}
-          disabled={disable}
-        />
-      </Stack>
-    </Box>
+    <Drawer
+      opened={open}
+      onClose={onClose}
+      position="right"
+      size="lg"
+      closeOnClickOutside
+      title="Competition Detail"
+    >
+      <Box pos="relative">
+        <LoadingOverlay visible={isLoading} loaderProps={{ type: "oval" }} />
+        {error ? (
+          <Text>Error loading competition details</Text>
+        ) : (
+          <Stack>
+            <Button
+              onClick={() => toggle()}
+              leftSection={<IconEdit />}
+              variant={disable ? "filled" : "light"}
+            >
+              {disable ? "Edit" : "Editing..."}
+            </Button>
+            <CompetitionForm
+              initialValues={initialValues}
+              handleSubmit={handleSubmit}
+              icon={<IconDeviceFloppy />}
+              buttonText={"Save"}
+              disabled={disable}
+            />
+          </Stack>
+        )}
+      </Box>
+    </Drawer>
   );
 }

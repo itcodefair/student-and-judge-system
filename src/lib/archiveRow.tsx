@@ -1,5 +1,4 @@
 import moment from "moment";
-import React from "react";
 
 const archiveRow = async (rows: any[], url: string) => {
   if (rows.length === 0) {
@@ -19,8 +18,7 @@ const archiveRow = async (rows: any[], url: string) => {
       },
       body: JSON.stringify({
         ids,
-        updatedDate: moment().format(),
-        status: "archived",
+        status: "Archived",
       }),
     });
 

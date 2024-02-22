@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import sortBy from "lodash/sortBy";
 import addRow from "@/lib/addRow";
+import cloneRow from "@/lib/cloneRow";
 import archiveRow from "@/lib/archiveRow";
 import useSWR from "swr";
 import ArchiveButton from "@/components/actionButton/ArchiveButton";
@@ -21,8 +22,8 @@ import { useDisclosure } from "@mantine/hooks";
 import CreateCompetition from "./components/CreateCompetition";
 import ExportButton from "@/components/actionButton/ExportButton";
 import moment from "moment";
-import CompetitionPanel from "./components/CompetitionPanel";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import CompetitionDetail from "./components/CompetitionDetail";
 
 export interface Competition {
   _id: string;
@@ -41,9 +42,9 @@ export default function Competitions() {
   // const dataGridKey = "competition-table";
   const router = useRouter();
   const pathname = usePathname();
+  const id = useSearchParams().get("ItemId");
   const url = "/api/db/competition";
   const { data, error, isLoading, mutate } = useSWR(url);
-  const [compItems, setCompItems] = useState<Competition[]>([]);
   const [selectedRows, setSelectedRows] = useState<Competition[]>([]);
   const [years, setYears] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -112,13 +113,17 @@ export default function Competitions() {
       ] as string[];
       setSelectedYear(years[0]);
       setYears(years);
-      setCompItems(data);
     }
-  }, [data]);
+  }, [data, isLoading]);
 
   useEffect(() => {
-    const filterData = () => {
-      let data = compItems;
+    if (id) {
+      openPanel();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const filterData = (data: Competition[]) => {
       if (selectedYear) {
         const year = parseInt(selectedYear, 10);
         data = data.filter((item) => {
@@ -148,32 +153,28 @@ export default function Competitions() {
         }
       });
     };
-    const filteredData = filterData();
+    const filteredData = filterData(data);
     setFilteredData(filteredData);
-  }, [compItems, selectFilter, selectedYear, query]);
+  }, [data, selectFilter, selectedYear, query]);
 
   useEffect(() => {
-    const sorted = sortBy(compItems, [
+    const sorted = sortBy(filteredData, [
       (item) => {
         const value = item[sortStatus.columnAccessor];
         return typeof value === "string" ? value.toLowerCase() : value;
       },
     ]);
-    setCompItems(sortStatus.direction === "desc" ? sorted.reverse() : sorted);
+    setFilteredData(
+      sortStatus.direction === "desc" ? sorted.reverse() : sorted
+    );
   }, [sortStatus]);
 
   return (
     <Container fluid p="lg">
-      <Modal
-        opened={opened}
-        onClose={close}
-        centered
-        size="lg"
-        title="Create competition"
-      >
-        <CreateCompetition close={close} />
-      </Modal>
-      <CompetitionPanel open={panelOpened} onClose={closePanel} />
+      <CreateCompetition opened={opened} onClose={close} url={url} />
+      {id && (
+        <CompetitionDetail open={panelOpened} onClose={closePanel} id={id} />
+      )}
       <Flex mb={"lg"} justify="space-between">
         <Group>
           <Select
@@ -186,25 +187,14 @@ export default function Competitions() {
           />
           <CreateButton onClick={open} />
           <CloneButton
-            disabled={selectedRows.length === 0}
-            onClick={async () => {
-              const res = await addRow(selectedRows, url);
-              if (res) {
-                setSelectedRows([]);
-                mutate(selectedRows);
-              }
-            }}
+            selectedRows={selectedRows}
+            url={url}
+            setSelectedRows={setSelectedRows}
           />
           <ArchiveButton
-            disabled={selectedRows.length === 0}
-            count={selectedRows.length}
-            onClick={async () => {
-              const res = await archiveRow(selectedRows, url);
-              if (res) {
-                setSelectedRows([]);
-                mutate(selectedRows);
-              }
-            }}
+            selectedRows={selectedRows}
+            url={url}
+            setSelectedRows={setSelectedRows}
           />
         </Group>
         <Group>

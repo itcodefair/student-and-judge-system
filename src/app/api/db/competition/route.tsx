@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import getDbCollection from "@/lib/getDbCollection";
 import { ObjectId } from "mongodb";
+import moment from "moment";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -21,13 +22,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(competition, { status: 200 });
     }
     const competitions = await collection
-      .find({ status: { $ne: "archived" } })
+      .find({ status: { $not: { $regex: "archived", $options: "i" } } })
       .sort({ createdDate: -1 })
       .toArray();
 
     return NextResponse.json(competitions, { status: 200 });
   } catch (error) {
-    return NextResponse.json(error, { status: 500 });
+    throw NextResponse.json(error, { status: 500 });
   }
 }
 
@@ -43,16 +44,20 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(res, { status: 201 });
   } catch (error) {
-    // Handle errors
     return NextResponse.json(error, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { ids, status } = await req.json();
+    const { ids, ...values } = await req.json();
 
-    const mongoIds = ids.map((id) => new ObjectId(id));
+    let mongoIds;
+    if (Array.isArray(ids)) {
+      mongoIds = ids.map((id) => new ObjectId(id));
+    } else {
+      mongoIds = [new ObjectId(ids)];
+    }
 
     const collection = await getDbCollection("competitions");
     if (!collection) {
@@ -61,7 +66,7 @@ export async function PATCH(req: NextRequest) {
 
     const res = await collection.updateMany(
       { _id: { $in: mongoIds } },
-      { $set: { status: status } }
+      { $set: { updatedDate: moment().format(), ...values } }
     );
 
     // Check if any documents were updated

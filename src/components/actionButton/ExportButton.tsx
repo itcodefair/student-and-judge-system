@@ -6,7 +6,7 @@ export default function ExportButton({ data, fileName }) {
   return (
     <Tooltip label="Export">
       <ActionIcon
-        disabled={data.length === 0}
+        disabled={!data || data.length === 0}
         size={"lg"}
         onClick={() => {
           exportFile(data, fileName);
