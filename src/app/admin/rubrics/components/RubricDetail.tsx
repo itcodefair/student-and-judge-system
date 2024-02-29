@@ -1,32 +1,31 @@
-import { useEffect, useState } from "react";
-import CompetitionForm, { CompetitionFormActions } from "./CompetitionForm";
-import useSWR from "swr";
-import { IconDeviceFloppy, IconEdit } from "@tabler/icons-react";
 import {
-  Box,
-  Button,
   Drawer,
+  Box,
   LoadingOverlay,
   Stack,
+  Button,
   Text,
 } from "@mantine/core";
-import { Competition } from "../page";
+import { IconEdit, IconDeviceFloppy } from "@tabler/icons-react";
+import React, { useEffect, useState } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { useDisclosure } from "@mantine/hooks";
+import RubricForm, { RubricFormActions } from "./RubricForm";
 import editRow from "@/lib/editRow";
+import { Rubric } from "../page";
 
-interface CompetitionDetailProps {
+interface RubricCreateProps {
   opened: boolean;
   onClose: () => void;
   id: string;
 }
 
-export default function CompetitionDetail(props: CompetitionDetailProps) {
-  const url = "/api/db/competition";
+export default function RubricDetail(props: RubricCreateProps) {
+  const url = "/api/db/rubric";
   const { opened, onClose, id } = props;
-  const { data, error, isLoading, mutate } = useSWR<Competition>(
-    `${url}?id=${id}`
-  );
-  const [disable, { toggle, open: disableOnLoad }] = useDisclosure(true);
+  const { data, error, isLoading, mutate } = useSWR<Rubric>(`${url}?id=${id}`);
+  const [disable, { toggle: toggleEdit, open: disableOnLoad }] =
+    useDisclosure(true);
   const [initialValues, setInitialValues] = useState({});
 
   useEffect(() => {
@@ -35,13 +34,11 @@ export default function CompetitionDetail(props: CompetitionDetailProps) {
       const { _id, createdDate, updatedDate, ...values } = data;
       const formattedData = {
         ...values,
-        registrationStartDate: new Date(values.registrationStartDate),
-        registrationEndDate: new Date(values.registrationEndDate),
-        judgeDate: new Date(values.judgeDate),
+        criteria: JSON.stringify(values.criteria, null, 2),
       };
       setInitialValues(formattedData);
-      CompetitionFormActions.setInitialValues(formattedData);
-      CompetitionFormActions.setValues(formattedData);
+      RubricFormActions.setInitialValues(formattedData);
+      RubricFormActions.setValues(formattedData);
     }
   }, [data]);
 
@@ -50,7 +47,7 @@ export default function CompetitionDetail(props: CompetitionDetailProps) {
     const res = await editRow(values, url);
     if (res) {
       mutate(values);
-      toggle();
+      toggleEdit();
       return true;
     } else {
       return false;
@@ -64,26 +61,26 @@ export default function CompetitionDetail(props: CompetitionDetailProps) {
       position="right"
       size="lg"
       closeOnClickOutside
-      title="Competition Detail"
+      title="Rubric Detail"
     >
       <Box pos="relative">
         <LoadingOverlay visible={isLoading} loaderProps={{ type: "oval" }} />
         {error ? (
-          <Text>Error loading competition details</Text>
+          <Text>Error loading rubric details</Text>
         ) : (
           <Stack>
             <Button
-              onClick={() => toggle()}
+              onClick={() => toggleEdit()}
               leftSection={<IconEdit />}
               variant={disable ? "filled" : "light"}
             >
               {disable ? "Edit" : "Editing..."}
             </Button>
-            <CompetitionForm
+            <RubricForm
               initialValues={initialValues}
               handleSubmit={handleSubmit}
               icon={<IconDeviceFloppy />}
-              buttonText={"Save"}
+              buttonText="Save"
               disabled={disable}
             />
           </Stack>

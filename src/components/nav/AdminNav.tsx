@@ -18,6 +18,7 @@ import {
   IconBadges,
   IconLogout,
   IconTournament,
+  IconWriting,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -53,6 +54,11 @@ const navLinks = [
     href: "/admin/users",
     label: "Users",
     icon: <IconUsers size="1rem" stroke={1.5} />,
+  },
+  {
+    href: "/admin/rubrics",
+    label: "Grading Rubrics",
+    icon: <IconWriting size="1rem" stroke={1.5} />,
   },
   // {
   //   href: "/admin/settings",

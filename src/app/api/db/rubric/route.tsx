@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const id = searchParams.get("id");
   try {
-    const collection = await getDbCollection("competitions");
+    const collection = await getDbCollection("rubrics");
     if (!collection) {
       return null;
     }
@@ -25,7 +25,6 @@ export async function GET(req: NextRequest) {
         .find({ status: { $not: { $regex: "archived", $options: "i" } } })
         .sort({ createdDate: -1 })
         .toArray();
-
       return NextResponse.json(res, { status: 200 });
     }
   } catch (error) {
@@ -37,7 +36,7 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
-    const collection = await getDbCollection("competitions");
+    const collection = await getDbCollection("rubrics");
     if (!collection) {
       return null;
     }
@@ -60,7 +59,7 @@ export async function PATCH(req: NextRequest) {
       mongoIds = [new ObjectId(ids)];
     }
 
-    const collection = await getDbCollection("competitions");
+    const collection = await getDbCollection("rubrics");
     if (!collection) {
       return null;
     }

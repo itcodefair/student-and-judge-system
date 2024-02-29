@@ -1,6 +1,6 @@
 import moment from "moment";
 
-export default async function addRow(data: {}, url: string) {
+const addRow = async (data: {}, url: string) => {
   try {
     const formattedData = { ...data };
     for (const key in formattedData) {
@@ -33,4 +33,6 @@ export default async function addRow(data: {}, url: string) {
     console.error("Error adding row:", error);
     return null;
   }
-}
+};
+
+export default addRow;

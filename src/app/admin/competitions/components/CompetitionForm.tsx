@@ -9,11 +9,12 @@ import { useForm, isNotEmpty, createFormActions } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 
 export interface CompetitionFormValues {
   title: string;
   type: string;
-  rubicId: string;
+  rubricId: string;
   judgeDate: Date | null;
   registrationStartDate: Date | null;
   registrationEndDate: Date | null;
@@ -29,15 +30,38 @@ export default function CompetitionForm({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, { toggle: toggleError }] = useDisclosure(false);
+  const { data: rubrics } = useSWR("/api/db/rubric");
   const form = useForm<CompetitionFormValues>({
     name: "competition-form",
     validateInputOnChange: true,
     validate: {
       title: isNotEmpty("Title cannot be empty"),
       type: isNotEmpty("Please select a competition type"),
+      registrationStartDate: (value, values) => {
+        if (!value) {
+          return "Start date cannot be empty";
+        } else if (
+          value &&
+          values.registrationEndDate &&
+          new Date(value) > new Date(values.registrationEndDate)
+        ) {
+          return "Start date cannot be more than end date";
+        }
+        return null;
+      },
+      registrationEndDate: (value, values) => {
+        if (!value) {
+          return "End date cannot be empty";
+        } else if (
+          value &&
+          values.judgeDate &&
+          new Date(value) >= new Date(values.judgeDate)
+        ) {
+          return "End date cannot be more than or equal to judge date";
+        }
+        return null;
+      },
       judgeDate: isNotEmpty("Judge date cannot be empty"),
-      registrationStartDate: isNotEmpty("Start Date cannot be empty"),
-      registrationEndDate: isNotEmpty("End date cannot be empty"),
       status: isNotEmpty("Status cannot be empty"),
     },
     enhanceGetInputProps: () => {
@@ -99,15 +123,14 @@ export default function CompetitionForm({
           {...form.getInputProps("type")}
         />
         <Select
-          label="Grading rubic"
-          placeholder="Choose a rubic"
+          label="Grading rubric"
+          placeholder="Choose a rubric"
           clearable
-          data={[
-            { value: "rubic id 1", label: "rubic 1" },
-            { value: "rubic id 2", label: "rubic 2" },
-            { value: "rubic id 3", label: "rubic 3" },
-          ]}
-          {...form.getInputProps("rubicId")}
+          data={rubrics.map((rubric) => ({
+            value: rubric.id,
+            label: rubric.name,
+          }))}
+          {...form.getInputProps("rubricId")}
         />
         <Group grow>
           <DatePickerInput

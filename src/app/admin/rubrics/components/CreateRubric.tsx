@@ -1,26 +1,23 @@
+import React from "react";
 import { IconSquareRoundedPlus } from "@tabler/icons-react";
 import addRow from "@/lib/addRow";
 import { useSWRConfig } from "swr";
-import CompetitionForm from "./CompetitionForm";
 import { Modal } from "@mantine/core";
+import RubricForm from "./RubricForm";
 
-interface CompetitionCreateProps {
+interface RubricCreateProps {
   opened: boolean;
   onClose: () => void;
   url: string;
 }
 
-export default function CreateCompetition(props: CompetitionCreateProps) {
+export default function CreateRubric(props: RubricCreateProps) {
   const { opened, onClose, url } = props;
   const { mutate } = useSWRConfig();
 
   const initialValues = {
-    title: "",
-    type: "",
-    rubricId: "",
-    judgeDate: null,
-    registrationStartDate: null,
-    registrationEndDate: null,
+    name: "",
+    criteria: "",
     status: "",
   };
 
@@ -41,9 +38,9 @@ export default function CreateCompetition(props: CompetitionCreateProps) {
       onClose={onClose}
       centered
       size="lg"
-      title="Create competition"
+      title="Create grading rubric"
     >
-      <CompetitionForm
+      <RubricForm
         initialValues={initialValues}
         handleSubmit={handleSubmit}
         icon={<IconSquareRoundedPlus />}

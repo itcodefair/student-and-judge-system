@@ -10,10 +10,6 @@ import {
 import { IconSearch } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import sortBy from "lodash/sortBy";
-import addRow from "@/lib/addRow";
-import cloneRow from "@/lib/cloneRow";
-import archiveRow from "@/lib/archiveRow";
 import useSWR from "swr";
 import ArchiveButton from "@/components/actionButton/ArchiveButton";
 import CloneButton from "@/components/actionButton/CloneButton";
@@ -24,6 +20,8 @@ import ExportButton from "@/components/actionButton/ExportButton";
 import moment from "moment";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import CompetitionDetail from "./components/CompetitionDetail";
+import filterRow from "@/lib/filterRow";
+import sortRow from "@/lib/sortRow";
 
 export interface Competition {
   _id: string;
@@ -31,7 +29,7 @@ export interface Competition {
   type: string;
   registrationStartDate: string;
   registrationEndDate: string;
-  rubicId: string;
+  rubricId: string;
   createdDate: string;
   updatedDate: string;
   judgeDate: string;
@@ -42,7 +40,7 @@ export default function Competitions() {
   // const dataGridKey = "competition-table";
   const router = useRouter();
   const pathname = usePathname();
-  const id = useSearchParams().get("ItemId");
+  const id = useSearchParams().get("CompId");
   const url = "/api/db/competition";
   const { data, error, isLoading, mutate } = useSWR(url);
   const [selectedRows, setSelectedRows] = useState<Competition[]>([]);
@@ -56,7 +54,7 @@ export default function Competitions() {
     DataTableSortStatus<Competition>
   >({ columnAccessor: "createdDate", direction: "desc" });
   const [query, setQuery] = useState("");
-  const [selectFilter, setSelectFilter] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("");
   const props = {
     resizable: true,
     sortable: true,
@@ -84,7 +82,7 @@ export default function Competitions() {
       render: ({ judgeDate }) => moment(judgeDate).format("YYYY-MM-DD"),
       ...props,
     },
-    { accessor: "rubicId", label: "Rubic Id", ...props },
+    { accessor: "rubricId", label: "Rubric Id", ...props },
     {
       accessor: "createdDate",
       label: "Created date",
@@ -123,47 +121,12 @@ export default function Competitions() {
   }, [id]);
 
   useEffect(() => {
-    const filterData = (data: Competition[]) => {
-      if (selectedYear) {
-        const year = parseInt(selectedYear, 10);
-        data = data.filter((item) => {
-          return new Date(item.createdDate).getFullYear() === year;
-        });
-      }
-      if (query.trim() === "") {
-        return data;
-      }
-      return data.filter((item) => {
-        if (!selectFilter) {
-          for (const key in item) {
-            if (key !== "_id" && item.hasOwnProperty(key)) {
-              const columnValue = item[key];
-              if (
-                typeof columnValue === "string" &&
-                columnValue.includes(query)
-              ) {
-                return true;
-              }
-            }
-          }
-          return false;
-        } else {
-          const columnValue = item[selectFilter];
-          return typeof columnValue === "string" && columnValue.includes(query);
-        }
-      });
-    };
-    const filteredData = filterData(data);
+    const filteredData = filterRow(data, selectedYear, query, selectedFilter);
     setFilteredData(filteredData);
-  }, [data, selectFilter, selectedYear, query]);
+  }, [data, selectedFilter, selectedYear, query]);
 
   useEffect(() => {
-    const sorted = sortBy(filteredData, [
-      (item) => {
-        const value = item[sortStatus.columnAccessor];
-        return typeof value === "string" ? value.toLowerCase() : value;
-      },
-    ]);
+    const sorted = sortRow(filteredData, sortStatus);
     setFilteredData(
       sortStatus.direction === "desc" ? sorted.reverse() : sorted
     );
@@ -173,7 +136,7 @@ export default function Competitions() {
     <Container fluid p="lg">
       <CreateCompetition opened={opened} onClose={close} url={url} />
       {id && (
-        <CompetitionDetail open={panelOpened} onClose={closePanel} id={id} />
+        <CompetitionDetail opened={panelOpened} onClose={closePanel} id={id} />
       )}
       <Flex mb={"lg"} justify="space-between">
         <Group>
@@ -206,12 +169,12 @@ export default function Competitions() {
               value: column.accessor,
               label: column.label,
             }))}
-            value={selectFilter}
+            value={selectedFilter}
             onChange={(value) => {
               if (!value) {
                 setQuery("");
               }
-              setSelectFilter(value || "");
+              setSelectedFilter(value || "");
             }}
           ></Select>
           <TextInput
@@ -221,7 +184,11 @@ export default function Competitions() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <ExportButton data={filteredData} fileName="competition" />
+          <ExportButton
+            data={filteredData}
+            fileName="competition"
+            fileType={"xlsx"}
+          />
         </Group>
       </Flex>
       <DataTable
@@ -237,10 +204,9 @@ export default function Competitions() {
         onSortStatusChange={setSortStatus}
         idAccessor="_id"
         onRowClick={({ record }) => {
-          router.push(pathname + "?ItemId=" + record._id, {
+          router.push(pathname + "?CompId=" + record._id, {
             scroll: false,
           });
-          openPanel();
         }}
       />
     </Container>

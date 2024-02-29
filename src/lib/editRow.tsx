@@ -1,4 +1,4 @@
-export default async function editRow(rowData: any, url: string) {
+const editRow = async (rowData: any, url: string) => {
   try {
     const { _id, ...values } = rowData;
 
@@ -21,4 +21,6 @@ export default async function editRow(rowData: any, url: string) {
     console.error("Error editing row:", error);
     return null;
   }
-}
+};
+
+export default editRow;
