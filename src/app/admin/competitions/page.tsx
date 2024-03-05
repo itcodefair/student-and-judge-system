@@ -60,44 +60,44 @@ export default function Competitions() {
     sortable: true,
   };
   const columns = [
-    { accessor: "title", label: "Title", ...props },
-    { accessor: "type", label: "Type", ...props },
+    { accessor: "title", title: "Title", ...props },
+    { accessor: "type", title: "Type", ...props },
     {
       accessor: "registrationStartDate",
-      label: "Registration start date",
+      title: "Registration start date",
       render: ({ registrationStartDate }) =>
         moment(registrationStartDate).local().format("YYYY-MM-DD"),
       ...props,
     },
     {
       accessor: "registrationEndDate",
-      label: "Registration end date",
+      title: "Registration end date",
       render: ({ registrationEndDate }) =>
         moment(registrationEndDate).local().format("YYYY-MM-DD"),
       ...props,
     },
     {
       accessor: "judgeDate",
-      label: "Judge date",
+      title: "Judge date",
       render: ({ judgeDate }) => moment(judgeDate).local().format("YYYY-MM-DD"),
       ...props,
     },
-    { accessor: "rubricId", label: "Rubric Id", ...props },
+    { accessor: "rubricId", title: "Rubric Id", ...props },
     {
       accessor: "createdDate",
-      label: "Created date",
+      title: "Created date",
       render: ({ createdDate }) =>
         moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss"),
       ...props,
     },
     {
       accessor: "updatedDate",
-      label: "Updated date",
+      title: "Updated date",
       render: ({ updatedDate }) =>
         moment(updatedDate).local().format("YYYY-MM-DD HH:mm:ss"),
       ...props,
     },
-    { accessor: "status", label: "Status", ...props },
+    { accessor: "status", title: "Status", ...props },
   ];
 
   useEffect(() => {
@@ -167,7 +167,7 @@ export default function Competitions() {
             placeholder="Search all..."
             data={columns.map((column) => ({
               value: column.accessor,
-              label: column.label,
+              label: column.title,
             }))}
             value={selectedFilter}
             onChange={(value) => {

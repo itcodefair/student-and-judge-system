@@ -7,23 +7,26 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const id = searchParams.get("id");
   try {
-    const collection = await getDbCollection("rubrics");
+    const collection = await getDbCollection("users");
     if (!collection) {
       return null;
     }
     if (id) {
-      const res = await collection.findOne({ _id: new ObjectId(id) });
+      const res = await collection.findOne(
+        { _id: new ObjectId(id) },
+        {
+          projection: { password: 0 },
+        }
+      );
       if (!res) {
-        return NextResponse.json(
-          { error: "Rubric not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
       return NextResponse.json(res, { status: 200 });
     } else {
       const res = await collection
         .find({ status: { $not: { $regex: "archived", $options: "i" } } })
         .sort({ createdDate: -1 })
+        .project({ password: 0 })
         .toArray();
       return NextResponse.json(res, { status: 200 });
     }
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
-    const collection = await getDbCollection("rubrics");
+    const collection = await getDbCollection("users");
     if (!collection) {
       return null;
     }

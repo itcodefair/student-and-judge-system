@@ -56,10 +56,10 @@ export default function Rubrics() {
     sortable: true,
   };
   const columns = [
-    { accessor: "name", label: "Rubric Name", ...props },
+    { accessor: "name", title: "Rubric Name", ...props },
     {
       accessor: "criteria",
-      label: "Criterias",
+      title: "Criterias",
       ...props,
       render: ({ _id }) => (
         <ActionIcon
@@ -79,19 +79,19 @@ export default function Rubrics() {
     },
     {
       accessor: "createdDate",
-      label: "Created date",
+      title: "Created date",
       render: ({ createdDate }) =>
         moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss"),
       ...props,
     },
     {
       accessor: "updatedDate",
-      label: "Updated date",
+      title: "Updated date",
       render: ({ updatedDate }) =>
         moment(updatedDate).local().format("YYYY-MM-DD HH:mm:ss"),
       ...props,
     },
-    { accessor: "status", label: "Status", ...props },
+    { accessor: "status", title: "Status", ...props },
   ];
 
   useEffect(() => {
