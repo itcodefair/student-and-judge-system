@@ -67,7 +67,7 @@ export async function PATCH(req: NextRequest) {
 
     const res = await collection.updateMany(
       { _id: { $in: mongoIds } },
-      { $set: { updatedDate: moment().format(), ...values } }
+      { $set: { updatedDate: moment().local().format(), ...values } }
     );
 
     // Check if any documents were updated

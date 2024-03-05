@@ -87,8 +87,8 @@ export default function Rubrics() {
     {
       accessor: "updatedDate",
       label: "Updated date",
-      render: ({ createdDate }) =>
-        moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss"),
+      render: ({ updatedDate }) =>
+        moment(updatedDate).local().format("YYYY-MM-DD HH:mm:ss"),
       ...props,
     },
     { accessor: "status", label: "Status", ...props },

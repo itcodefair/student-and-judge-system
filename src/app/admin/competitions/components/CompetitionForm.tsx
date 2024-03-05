@@ -10,6 +10,7 @@ import { useDisclosure } from "@mantine/hooks";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
+import { Rubric } from "../../rubrics/page";
 
 export interface CompetitionFormValues {
   title: string;
@@ -30,7 +31,8 @@ export default function CompetitionForm({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, { toggle: toggleError }] = useDisclosure(false);
-  const { data: rubrics } = useSWR("/api/db/rubric");
+  const { data: rubricsData } = useSWR("/api/db/rubric");
+  const [rubrics, setRubrics] = useState([]);
   const form = useForm<CompetitionFormValues>({
     name: "competition-form",
     validateInputOnChange: true,
@@ -90,6 +92,10 @@ export default function CompetitionForm({
     form.initialize(initialValues);
   }, [form, initialValues]);
 
+  useEffect(() => {
+    setRubrics(rubricsData);
+  }, [rubricsData]);
+
   return (
     <form
       onSubmit={form.onSubmit((formValues: CompetitionFormValues) => {
@@ -126,10 +132,13 @@ export default function CompetitionForm({
           label="Grading rubric"
           placeholder="Choose a rubric"
           clearable
-          data={rubrics.map((rubric) => ({
-            value: rubric.id,
-            label: rubric.name,
-          }))}
+          data={
+            rubrics &&
+            rubrics.map((rubric: Rubric) => ({
+              value: rubric._id,
+              label: rubric.name,
+            }))
+          }
           {...form.getInputProps("rubricId")}
         />
         <Group grow>

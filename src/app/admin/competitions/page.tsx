@@ -66,20 +66,20 @@ export default function Competitions() {
       accessor: "registrationStartDate",
       label: "Registration start date",
       render: ({ registrationStartDate }) =>
-        moment(registrationStartDate).format("YYYY-MM-DD"),
+        moment(registrationStartDate).local().format("YYYY-MM-DD"),
       ...props,
     },
     {
       accessor: "registrationEndDate",
       label: "Registration end date",
       render: ({ registrationEndDate }) =>
-        moment(registrationEndDate).format("YYYY-MM-DD"),
+        moment(registrationEndDate).local().format("YYYY-MM-DD"),
       ...props,
     },
     {
       accessor: "judgeDate",
       label: "Judge date",
-      render: ({ judgeDate }) => moment(judgeDate).format("YYYY-MM-DD"),
+      render: ({ judgeDate }) => moment(judgeDate).local().format("YYYY-MM-DD"),
       ...props,
     },
     { accessor: "rubricId", label: "Rubric Id", ...props },
@@ -93,8 +93,8 @@ export default function Competitions() {
     {
       accessor: "updatedDate",
       label: "Updated date",
-      render: ({ createdDate }) =>
-        moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss"),
+      render: ({ updatedDate }) =>
+        moment(updatedDate).local().format("YYYY-MM-DD HH:mm:ss"),
       ...props,
     },
     { accessor: "status", label: "Status", ...props },
@@ -207,6 +207,7 @@ export default function Competitions() {
           router.push(pathname + "?CompId=" + record._id, {
             scroll: false,
           });
+          openPanel();
         }}
       />
     </Container>
