@@ -3,12 +3,20 @@ import { useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import moment from "moment";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import useSWR from "swr";
-import { Container } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { Container, Group, SegmentedControl, Select, TextInput } from "@mantine/core";
+import { IconCheck, IconSearch, IconX } from "@tabler/icons-react";
+import ArchiveButton from "@/components/actionButton/ArchiveButton";
+import CreateButton from "@/components/actionButton/CreateButton";
+import { theme } from "@/styles/theme";
+import ExportButton from "@/components/actionButton/ExportButton";
+import filterRow from "@/lib/filterRow";
+import sortRow from "@/lib/sortRow";
+import CreateUser from "./components/CreateUser";
 
 export interface User {
+  _id: string;
   email: string;
   name: string;
   gender: string;
@@ -30,10 +38,14 @@ export default function Users() {
   const [opened, { open, close }] = useDisclosure(false);
   const [panelOpened, { open: openPanel, close: closePanel }] =
     useDisclosure(false);
-  //   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Rubric>>({
-  //     columnAccessor: "createdDate",
-  //     direction: "desc",
-  //   });
+  const [userType, setUserType] = useState("student")
+  const [filteredData, setFilteredData] = useState<User[]>([]);
+  const [query, setQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("");
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<User>>({
+    columnAccessor: "createdDate",
+    direction: "desc",
+  });
   const props = {
     resizable: true,
     sortable: true,
@@ -45,6 +57,7 @@ export default function Users() {
     { accessor: "gender", title: "Gender", ...props },
     { accessor: "course", title: "Course", ...props },
     { accessor: "credits", title: "Credit", ...props },
+    { accessor: "school", title: "School", ...props },
     {
       accessor: "isVerified",
       title: "Verified",
@@ -77,6 +90,32 @@ export default function Users() {
   ];
 
   useEffect(() => {
+    if (data) {
+      const filteredUserType = data.filter((item) => {
+        return item["userType"].includes(userType);
+      })
+      const queryFilteredData = filterRow(filteredUserType, null, query, selectedFilter);
+      setFilteredData(queryFilteredData);
+    }
+  }, [data, selectedFilter, query, userType]);
+
+  useEffect(() => {
+    if (filteredData.length > 0) {
+      const sorted = sortRow(filteredData, sortStatus);
+      setFilteredData(
+        sortStatus.direction === "desc" ? sorted.reverse() : sorted
+      );
+    }
+  }, [sortStatus]);
+
+  useEffect(() => {
+    setSortStatus({
+      columnAccessor: "createdDate",
+      direction: "desc",
+    })
+  }, [userType])
+
+  useEffect(() => {
     if (id) {
       openPanel();
     }
@@ -84,35 +123,60 @@ export default function Users() {
 
   return (
     <Container fluid p="lg">
-      {/* <CreateRubric opened={opened} onClose={close} url={url} />
-      {id && <RubricDetail opened={panelOpened} onClose={closePanel} id={id} />} */}
-      {/* <Group mb={"lg"} justify="space-between">
+      <CreateUser opened={opened} onClose={close} url={url} />
+      {/* {id && <RubricDetail opened={panelOpened} onClose={closePanel} id={id} />} */}
+      <Group mb={"lg"} justify="space-between">
         <Group>
+          <SegmentedControl color={theme.primaryColor} value={userType} onChange={setUserType} data={["student", "judge", "admin"]} />
           <CreateButton onClick={open} />
-          <CloneButton
-            selectedRows={selectedRows}
-            url={url}
-            setSelectedRows={setSelectedRows}
-          />
           <ArchiveButton
             selectedRows={selectedRows}
             url={url}
             setSelectedRows={setSelectedRows}
           />
         </Group>
-        <ExportButton data={data} fileName="bruv" fileType={"json"} />
-      </Group> */}
+        <Group>
+          <Select
+            clearable
+            checkIconPosition="right"
+            placeholder="Search all..."
+            data={columns.map((column) => ({
+              value: column.accessor,
+              label: column.title,
+            }))}
+            value={selectedFilter}
+            onChange={(value) => {
+              if (!value) {
+                setQuery("");
+              }
+              setSelectedFilter(value || "");
+            }}
+          ></Select>
+          <TextInput
+            radius={"xl"}
+            placeholder="search"
+            leftSection={<IconSearch />}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <ExportButton
+            data={filteredData}
+            fileName="user"
+            fileType={"xlsx"}
+          />
+        </Group>
+      </Group>
       <DataTable
         minHeight={150}
         withTableBorder
         highlightOnHover
         fetching={isLoading}
         columns={columns}
-        records={data}
+        records={filteredData}
         selectedRecords={selectedRows}
         onSelectedRecordsChange={setSelectedRows}
-        // sortStatus={sortStatus}
-        // onSortStatusChange={setSortStatus}
+        sortStatus={sortStatus}
+        onSortStatusChange={setSortStatus}
         idAccessor="_id"
         onRowClick={({ record }) => {
           router.push(pathname + "?UserId=" + record._id, {
@@ -120,17 +184,6 @@ export default function Users() {
           });
           openPanel();
         }}
-        // rowExpansion={{
-        //   expanded: {
-        //     recordIds: expandedRecordIds,
-        //     // onRecordIdsChange: setExpandedRecordIds,
-        //   },
-        //   content: ({ record }) => (
-        //     <pre>
-        //       <Code>{JSON.stringify(record.criteria, null, 2)}</Code>
-        //     </pre>
-        //   ),
-        // }}
       />
     </Container>
   );
