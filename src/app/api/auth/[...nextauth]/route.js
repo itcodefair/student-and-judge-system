@@ -11,12 +11,16 @@ export const handler = NextAuth({
 		strategy: "jwt",
 		maxAge: 60 * 60 * 24, // 24 hours
 	},
+	credentials: {
+		email: { label: "Email", type: "text" },
+		password: { label: "Password", type: "password" },
+	},
 	providers: [
 		CredentialsProvider({
 			async authorize(credentials) {
 				try {
-					container = await getMongoContainer(USER_CONTAINER);
-					const user = await container.findOne({
+					const collection = await getDbCollection("users");
+					const user = await collection.findOne({
 						email: credentials.email,
 					});
 
