@@ -5,7 +5,13 @@ import moment from "moment";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
-import { Container, Group, SegmentedControl, Select, TextInput } from "@mantine/core";
+import {
+  Container,
+  Group,
+  SegmentedControl,
+  Select,
+  TextInput,
+} from "@mantine/core";
 import { IconCheck, IconSearch, IconX } from "@tabler/icons-react";
 import ArchiveButton from "@/components/actionButton/ArchiveButton";
 import CreateButton from "@/components/actionButton/CreateButton";
@@ -38,7 +44,8 @@ export default function Users() {
   const [opened, { open, close }] = useDisclosure(false);
   const [panelOpened, { open: openPanel, close: closePanel }] =
     useDisclosure(false);
-  const [userType, setUserType] = useState("student")
+  const [userType, setUserType] = useState("student");
+  const hidden = userType !== "student" ? true : false;
   const [filteredData, setFilteredData] = useState<User[]>([]);
   const [query, setQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("");
@@ -49,15 +56,31 @@ export default function Users() {
   const props = {
     resizable: true,
     sortable: true,
+    filterable: true,
   };
 
   const columns = [
     { accessor: "email", title: "Email", ...props },
     { accessor: "name", title: "Name", ...props },
     { accessor: "gender", title: "Gender", ...props },
-    { accessor: "course", title: "Course", ...props },
-    { accessor: "credits", title: "Credit", ...props },
-    { accessor: "school", title: "School", ...props },
+    {
+      accessor: "course",
+      title: "Course",
+      ...props,
+      hidden: hidden,
+    },
+    {
+      accessor: "credits",
+      title: "Credit",
+      ...props,
+      hidden: hidden,
+    },
+    {
+      accessor: "school",
+      title: "School",
+      ...props,
+      hidden: hidden,
+    },
     {
       accessor: "isVerified",
       title: "Verified",
@@ -65,6 +88,7 @@ export default function Users() {
         return isVerified ? <IconCheck color="green" /> : <IconX color="red" />;
       },
       ...props,
+      filterable: false,
     },
     {
       accessor: "createdDate",
@@ -93,8 +117,13 @@ export default function Users() {
     if (data) {
       const filteredUserType = data.filter((item) => {
         return item["userType"].includes(userType);
-      })
-      const queryFilteredData = filterRow(filteredUserType, null, query, selectedFilter);
+      });
+      const queryFilteredData = filterRow(
+        filteredUserType,
+        null,
+        query,
+        selectedFilter
+      );
       setFilteredData(queryFilteredData);
     }
   }, [data, selectedFilter, query, userType]);
@@ -112,8 +141,8 @@ export default function Users() {
     setSortStatus({
       columnAccessor: "createdDate",
       direction: "desc",
-    })
-  }, [userType])
+    });
+  }, [userType]);
 
   useEffect(() => {
     if (id) {
@@ -127,7 +156,12 @@ export default function Users() {
       {/* {id && <RubricDetail opened={panelOpened} onClose={closePanel} id={id} />} */}
       <Group mb={"lg"} justify="space-between">
         <Group>
-          <SegmentedControl color={theme.primaryColor} value={userType} onChange={setUserType} data={["student", "judge", "admin"]} />
+          <SegmentedControl
+            color={theme.primaryColor}
+            value={userType}
+            onChange={setUserType}
+            data={["student", "judge", "admin"]}
+          />
           <CreateButton onClick={open} />
           <ArchiveButton
             selectedRows={selectedRows}
@@ -140,10 +174,12 @@ export default function Users() {
             clearable
             checkIconPosition="right"
             placeholder="Search all..."
-            data={columns.map((column) => ({
-              value: column.accessor,
-              label: column.title,
-            }))}
+            data={columns
+              .filter((column) => column.filterable !== false)
+              .map((column) => ({
+                value: column.accessor,
+                label: column.title,
+              }))}
             value={selectedFilter}
             onChange={(value) => {
               if (!value) {
@@ -159,11 +195,7 @@ export default function Users() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <ExportButton
-            data={filteredData}
-            fileName="user"
-            fileType={"xlsx"}
-          />
+          <ExportButton data={filteredData} fileName="user" fileType={"xlsx"} />
         </Group>
       </Group>
       <DataTable

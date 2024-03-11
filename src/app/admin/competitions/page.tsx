@@ -6,6 +6,10 @@ import {
   Flex,
   Group,
   Modal,
+  Button,
+  Text,
+  UnstyledButton,
+  Box,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
@@ -22,6 +26,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import CompetitionDetail from "./components/CompetitionDetail";
 import filterRow from "@/lib/filterRow";
 import sortRow from "@/lib/sortRow";
+import { theme } from "@/styles/theme";
+import RubricDetail from "../rubrics/components/RubricDetail";
 
 export interface Competition {
   _id: string;
@@ -37,10 +43,10 @@ export interface Competition {
 }
 
 export default function Competitions() {
-  // const dataGridKey = "competition-table";
   const router = useRouter();
   const pathname = usePathname();
   const id = useSearchParams().get("CompId");
+  const rubricId = useSearchParams().get("RubricId");
   const url = "/api/db/competition";
   const { data, error, isLoading, mutate } = useSWR(url);
   const [selectedRows, setSelectedRows] = useState<Competition[]>([]);
@@ -58,6 +64,7 @@ export default function Competitions() {
   const props = {
     resizable: true,
     sortable: true,
+    filterable: true,
   };
   const columns = [
     { accessor: "title", title: "Title", ...props },
@@ -82,7 +89,29 @@ export default function Competitions() {
       render: ({ judgeDate }) => moment(judgeDate).local().format("YYYY-MM-DD"),
       ...props,
     },
-    { accessor: "rubricId", title: "Rubric Id", ...props },
+    {
+      accessor: "rubricId",
+      title: "Rubric",
+      render: ({ rubricId }) => {
+        return (
+          rubricId && (
+            <UnstyledButton
+              c={theme.primaryColor}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                router.push(pathname + "?RubricId=" + rubricId, {
+                  scroll: false,
+                });
+              }}
+            >
+              view
+            </UnstyledButton>
+          )
+        );
+      },
+      ...props,
+      filterable: false,
+    },
     {
       accessor: "createdDate",
       title: "Created date",
@@ -114,11 +143,14 @@ export default function Competitions() {
     }
   }, [data, isLoading]);
 
+  function onClose() {
+    router.replace(pathname);
+    closePanel;
+  }
+
   useEffect(() => {
-    if (id) {
-      openPanel();
-    }
-  }, [id]);
+    openPanel();
+  }, [id, rubricId]);
 
   useEffect(() => {
     const filteredData = filterRow(data, selectedYear, query, selectedFilter);
@@ -136,7 +168,10 @@ export default function Competitions() {
     <Container fluid p="lg">
       <CreateCompetition opened={opened} onClose={close} url={url} />
       {id && (
-        <CompetitionDetail opened={panelOpened} onClose={closePanel} id={id} />
+        <CompetitionDetail opened={panelOpened} onClose={onClose} id={id} />
+      )}
+      {rubricId && (
+        <RubricDetail opened={panelOpened} onClose={onClose} id={rubricId} />
       )}
       <Flex mb={"lg"} justify="space-between">
         <Group>
@@ -165,10 +200,12 @@ export default function Competitions() {
             clearable
             checkIconPosition="right"
             placeholder="Search all..."
-            data={columns.map((column) => ({
-              value: column.accessor,
-              label: column.title,
-            }))}
+            data={columns
+              .filter((column) => column.filterable !== false)
+              .map((column) => ({
+                value: column.accessor,
+                label: column.title,
+              }))}
             value={selectedFilter}
             onChange={(value) => {
               if (!value) {

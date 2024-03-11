@@ -6,6 +6,7 @@ import {
   Select,
   Flex,
   Group,
+  UnstyledButton,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
@@ -40,7 +41,12 @@ export default function Projects() {
   const id = useSearchParams().get("ProjectId");
   const url = "/api/db/project";
   const { data, error, isLoading, mutate } = useSWR(url);
-  console.log(data)
+  const {
+    data: users,
+    error: userError,
+    isLoading: userIsLoading,
+    mutate: userMutate,
+  } = useSWR("/api/db/user");
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [years, setYears] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -48,9 +54,10 @@ export default function Projects() {
   const [panelOpened, { open: openPanel, close: closePanel }] =
     useDisclosure(false);
   const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [sortStatus, setSortStatus] = useState<
-    DataTableSortStatus<any>
-  >({ columnAccessor: "createdDate", direction: "desc" });
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<any>>({
+    columnAccessor: "createdDate",
+    direction: "desc",
+  });
   const [query, setQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("");
   const props = {
@@ -58,44 +65,44 @@ export default function Projects() {
     sortable: true,
   };
   const columns = [
-    { accessor: "title", title: "Title", ...props },
-    { accessor: "type", title: "Type", ...props },
-    // {
-    //   accessor: "registrationStartDate",
-    //   title: "Registration start date",
-    //   render: ({ registrationStartDate }) =>
-    //     moment(registrationStartDate).local().format("YYYY-MM-DD"),
-    //   ...props,
-    // },
-    // {
-    //   accessor: "registrationEndDate",
-    //   title: "Registration end date",
-    //   render: ({ registrationEndDate }) =>
-    //     moment(registrationEndDate).local().format("YYYY-MM-DD"),
-    //   ...props,
-    // },
-    // {
-    //   accessor: "judgeDate",
-    //   title: "Judge date",
-    //   render: ({ judgeDate }) => moment(judgeDate).local().format("YYYY-MM-DD"),
-    //   ...props,
-    // },
-    // { accessor: "rubricId", title: "Rubric Id", ...props },
-    // {
-    //   accessor: "createdDate",
-    //   title: "Created date",
-    //   render: ({ createdDate }) =>
-    //     moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss"),
-    //   ...props,
-    // },
-    // {
-    //   accessor: "updatedDate",
-    //   title: "Updated date",
-    //   render: ({ updatedDate }) =>
-    //     moment(updatedDate).local().format("YYYY-MM-DD HH:mm:ss"),
-    //   ...props,
-    // },
-    // { accessor: "status", title: "Status", ...props },
+    { accessor: "projectName", title: "Project name", ...props },
+    { accessor: "projectType", title: "Project type", ...props },
+    { accessor: "groupName", title: "Group name", ...props },
+    { accessor: "competition", title: "Competition", ...props },
+    {
+      accessor: "creator",
+      title: "Creator",
+      render: ({ creator }) => {
+        if (users) {
+          const user = users.filter((user) => user._id === creator)[0];
+          return <UnstyledButton>{user.email}</UnstyledButton>;
+        }
+      },
+      ...props,
+      filterable: false,
+    },
+    { accessor: "teamMember", title: "Members", ...props },
+    {
+      accessor: "createdDate",
+      title: "Created date",
+      render: ({ createdDate }) => {
+        return createdDate
+          ? moment(createdDate).local().format("YYYY-MM-DD HH:mm:ss")
+          : "";
+      },
+      ...props,
+    },
+    {
+      accessor: "updatedDate",
+      title: "Updated date",
+      render: ({ updatedDate }) => {
+        return updatedDate
+          ? moment(updatedDate).local().format("YYYY-MM-DD HH:mm:ss")
+          : "";
+      },
+      ...props,
+    },
+    { accessor: "status", title: "Status", ...props },
   ];
 
   useEffect(() => {
@@ -195,7 +202,7 @@ export default function Projects() {
         highlightOnHover
         fetching={isLoading}
         columns={columns}
-        records={filteredData}
+        records={data}
         selectedRecords={selectedRows}
         onSelectedRecordsChange={setSelectedRows}
         sortStatus={sortStatus}
@@ -211,4 +218,3 @@ export default function Projects() {
     </Container>
   );
 }
-
