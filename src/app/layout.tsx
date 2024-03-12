@@ -11,6 +11,7 @@ import { PropsWithChildren } from "react";
 import { theme } from "@/styles/theme";
 import AdminShell from "@/components/shells/AdminShell";
 import { SWRConfig } from "swr";
+import Shell from "@/components/shells/Shell";
 
 export default function Layout({ children }) {
   return (
@@ -38,7 +39,8 @@ const MantineLayout = (props: PropsWithChildren) => {
             fetch(resource, init).then((res) => res.json()),
         }}
       >
-        <AdminShell>{children}</AdminShell>
+        {/* <AdminShell>{children}</AdminShell> */}
+        <Shell>{children}</Shell>
       </SWRConfig>
     </MantineProvider>
   );
