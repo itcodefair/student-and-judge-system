@@ -23,7 +23,7 @@ import { usePathname, useRouter } from "next/navigation";
 export default function Shell(props: PropsWithChildren) {
   const { children } = props;
   const [opened, { toggle }] = useDisclosure();
-  const isMobile = useBreakPoint("sm");
+  const isMobile = useBreakPoint("md");
   const pathName = usePathname();
   return (
     <AppShell header={{ height: isMobile ? 50 : 60 }}>
@@ -37,10 +37,10 @@ export default function Shell(props: PropsWithChildren) {
                     opened={opened}
                     onClick={toggle}
                     size="sm"
-                    hiddenFrom="sm"
+                    hiddenFrom="md"
                   />
                 </Menu.Target>
-                <Menu.Dropdown hiddenFrom="sm">
+                <Menu.Dropdown hiddenFrom="md">
                   <Menu.Item
                     leftSection={<IconMail />}
                     component="a"
@@ -62,17 +62,17 @@ export default function Shell(props: PropsWithChildren) {
                 src={MobileLogo}
                 alt="CDU Logo"
                 mah={45}
-                hiddenFrom="sm"
+                hiddenFrom="md"
               />
               <Image
                 component={NextImage}
                 src={DesktopLogo}
                 alt="CDU Logo"
                 mah={60}
-                visibleFrom="sm"
+                visibleFrom="md"
               />
             </Group>
-            <Group visibleFrom="sm">
+            <Group visibleFrom="md">
               {!pathName.includes("contact") && (
                 <Button
                   variant="outline"
@@ -81,16 +81,6 @@ export default function Shell(props: PropsWithChildren) {
                   href="/contact"
                 >
                   Contact
-                </Button>
-              )}
-              {!pathName.includes("register") && (
-                <Button
-                  variant="outline"
-                  leftSection={<IconUserPlus />}
-                  component={Link}
-                  href="/register"
-                >
-                  Register
                 </Button>
               )}
               {!pathName.includes("auth") && (

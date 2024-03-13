@@ -2,68 +2,57 @@
 
 import {
   Center,
-  Group,
   Stack,
   Text,
-  Title,
-  Box,
-  SimpleGrid,
-  TextInput,
-  Button,
-  PasswordInput,
-  Flex,
-  Card,
   Paper,
+  SegmentedControl,
+  Grid,
 } from "@mantine/core";
 import Lottie from "lottie-react";
 import CodingAnimation from "@/../public/images/Coding_Animation.json";
-import React from "react";
-import { isEmail, isNotEmpty, useForm } from "@mantine/form";
-import { IconLogin } from "@tabler/icons-react";
-import { theme } from "@/styles/theme";
+import React, { useState } from "react";
+import LoginForm from "./component/LoginForm";
+import RegisterForm from "./component/RegisterForm";
 
 export default function Auth() {
-  const form = useForm<any>({
-    name: "auth-form",
-    validate: {
-      email: isEmail("Title cannot be empty"),
-      password: isNotEmpty("Please select a competition type"),
-    },
-  });
+  const [authForm, setAuthForm] = useState("login");
   return (
-    <Stack align="center" mt="xl">
-      <Title order={1}>
-        Welcome to <span color={theme.primaryColor}>IT Code Fair Portal</span>
-      </Title>
-      <Title order={3}>Take part in challenges & competitions</Title>
-      <Group grow justify="space-between">
-        <Lottie animationData={CodingAnimation} />
-        <Paper withBorder shadow="sm" radius="md" p={"xl"} h={"100%"}>
-          <form
-            onSubmit={form.onSubmit((formValues: any) => {
-              console.log(formValues);
-            })}
-          >
-            <Stack>
-              <TextInput
-                label="Email"
-                placeholder="s123456@cdu.edu.au"
-                withAsterisk
-                {...form.getInputProps("email")}
+    <Stack>
+      <Grid grow>
+        <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 2, md: 1 }}>
+          <Lottie animationData={CodingAnimation} />
+        </Grid.Col>
+        <Grid.Col
+          span={{ base: 12, md: 6 }}
+          mt={{ md: "lg" }}
+          order={{ base: 1, md: 1 }}
+        >
+          <Stack mt={{ md: "lg" }}>
+            <Center>
+              <Text fz={{ base: 23, sm: 30, md: 35 }} fw={700}>
+                Welcome to IT Code Fair Portal
+              </Text>
+            </Center>
+            <Center>
+              <Text fz={{ base: 15, sm: 20, md: 25 }} fw={500}>
+                Take part in challenges & competitions
+              </Text>
+            </Center>
+            <Paper withBorder shadow="sm" radius="md" p={"xl"}>
+              <SegmentedControl
+                mb={"sm"}
+                data={[
+                  { label: "Login", value: "login" },
+                  { label: "Register", value: "register" },
+                ]}
+                fullWidth
+                onChange={setAuthForm}
               />
-              <PasswordInput
-                label="Password"
-                placeholder="*********"
-                withAsterisk
-                {...form.getInputProps("password")}
-              />
-              <Button type="submit" leftSection={<IconLogin />}>
-                Login
-              </Button>
-            </Stack>
-          </form>
-        </Paper>
-      </Group>
+              {authForm === "login" ? <LoginForm /> : <RegisterForm />}
+            </Paper>
+          </Stack>
+        </Grid.Col>
+      </Grid>
     </Stack>
   );
 }
