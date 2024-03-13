@@ -71,24 +71,39 @@ export default function RegisterForm() {
             {...form.getInputProps("confirmPassword")}
           />
         </Group>
-        <Divider mt={"xs"} />
+        <Divider mt="xs" />
         <Select
           label="Highest level of education"
           description="Includes ongoing education"
-          placeholder="Pick an institution"
+          placeholder="Pick education level"
           data={[
             {
-              label: "Charles Darwin University",
-              value: "Charles Darwin University",
+              label: "Primary School",
+              value: "primary",
             },
-            { label: "Other", value: "other" },
+            {
+              label: "Secondary School",
+              value: "secondary",
+            },
+            {
+              label: "Short Course/TAFE/Cert",
+              value: "tafe",
+            },
+            {
+              label: "Undergraduate",
+              value: "undergraduate",
+            },
+            {
+              label: "Postgraduate",
+              value: "postgraduate",
+            },
           ]}
           withAsterisk
-          {...form.getInputProps("institution")}
+          {...form.getInputProps("educationLevel")}
         />
         <Select
-          label="Institute"
-          placeholder="Pick an institution"
+          label="School"
+          placeholder="Pick school"
           data={[
             {
               label: "Charles Darwin University",
@@ -97,7 +112,31 @@ export default function RegisterForm() {
             { label: "Other", value: "other" },
           ]}
           withAsterisk
-          {...form.getInputProps("institution")}
+          {...form.getInputProps("school")}
+        />
+        <Select
+          label="Completed Credit To Date"
+          placeholder="Pick credit"
+          data={[
+            {
+              label: "0 - 80 credits",
+              value: "1",
+            },
+            {
+              label: "81 - 120 credits",
+              value: "2",
+            },
+            {
+              label: "120+ credits",
+              value: "3",
+            },
+            {
+              label: "Not Applicable (Short Course/TAFE)",
+              value: "0",
+            },
+          ]}
+          withAsterisk
+          {...form.getInputProps("credit")}
         />
         <Button mt={"xs"} type="submit" leftSection={<IconUserPlus />}>
           Register
