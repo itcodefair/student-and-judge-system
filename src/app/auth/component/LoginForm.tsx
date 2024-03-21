@@ -13,15 +13,21 @@ import React from "react";
 export default function LoginForm() {
   const form = useForm<any>({
     name: "auth-form",
+    validateInputOnBlur: true,
     validate: {
-      email: isEmail("Title cannot be empty"),
-      password: isNotEmpty("Please select a competition type"),
+      email: isEmail("Enter your verified email"),
+      password: isNotEmpty("Enter your password"),
     },
   });
+
+  const handleOnLogin = async (formValues) => {
+    console.log(formValues);
+  };
+
   return (
     <form
       onSubmit={form.onSubmit((formValues: any) => {
-        console.log(formValues);
+        handleOnLogin(formValues);
       })}
     >
       <Stack gap={"xs"}>

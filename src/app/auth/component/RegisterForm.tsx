@@ -17,13 +17,13 @@ import {
   Alert,
 } from "@mantine/core";
 import { useForm, isEmail, isNotEmpty } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
   IconInfoCircle,
   IconUserPlus,
   IconX,
 } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 export interface RegisterFormData {
@@ -50,39 +50,40 @@ export default function RegisterForm() {
   const form = useForm<RegisterFormData>({
     name: "register-form",
     validateInputOnBlur: true,
-    // validate: {
-    //   firstName: isNotEmpty("First name cannot be empty"),
-    //   lastName: isNotEmpty("Last name cannot be empty"),
-    //   gender: isNotEmpty("Gender cannot be empty"),
-    //   email: isEmail("Invalid email"),
-    //   password: (value) => {
-    //     if (value) {
-    //       const passwordStrength = getStrength(value);
-    //       if (passwordStrength < 100) {
-    //         return "Password is too weak";
-    //       }
-    //     } else {
-    //       return "Password cannot be empty";
-    //     }
-    //   },
-    //   confirmPassword: (value, values) => {
-    //     if (value !== values.password) {
-    //       return "Password did not match";
-    //     }
-    //   },
-    //   educationLevel: isNotEmpty("Education level cannot be empty"),
-    //   school: isNotEmpty("School cannot be empty"),
-    //   credit: (value, values) => {
-    //     if (values.school == "Charles Darwin University") {
-    //       if (!value) {
-    //         return "Credit cannot be empty";
-    //       }
-    //     } else {
-    //       values.credit = null;
-    //     }
-    //   },
-    // },
+    validate: {
+      firstName: isNotEmpty("First name cannot be empty"),
+      lastName: isNotEmpty("Last name cannot be empty"),
+      gender: isNotEmpty("Gender cannot be empty"),
+      email: isEmail("Invalid email"),
+      password: (value) => {
+        if (value) {
+          const passwordStrength = getStrength(value);
+          if (passwordStrength < 100) {
+            return "Password is too weak";
+          }
+        } else {
+          return "Password cannot be empty";
+        }
+      },
+      confirmPassword: (value, values) => {
+        if (value !== values.password) {
+          return "Password did not match";
+        }
+      },
+      educationLevel: isNotEmpty("Education level cannot be empty"),
+      school: isNotEmpty("School cannot be empty"),
+      credit: (value, values) => {
+        if (values.school == "Charles Darwin University") {
+          if (!value) {
+            return "Credit cannot be empty";
+          }
+        } else {
+          values.credit = null;
+        }
+      },
+    },
   });
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [popoverOpened, setPopoverOpened] = useState(false);
@@ -112,6 +113,7 @@ export default function RegisterForm() {
         throw new Error(resMessage);
       } else {
         setErrorMessage("");
+        router.push("/auth");
       }
     } catch (error) {
       error instanceof Error && setErrorMessage(error.message);
